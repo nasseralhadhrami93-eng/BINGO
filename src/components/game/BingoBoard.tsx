@@ -164,43 +164,43 @@ export default function BingoBoard({ roomId, playerId, room }: BingoBoardProps) 
 
   return (
     <div className="w-full max-w-md mx-auto space-y-6 animate-fade-in-up">
-      <div className="flex items-center justify-between bg-neutral-900/50 p-4 rounded-2xl border border-white/5">
-        <div>
-          <div className="text-sm text-neutral-400 mb-2">التقدم</div>
-          <div className="flex gap-2" dir="ltr">
-            {["B", "I", "N", "G", "O"].map((letter, index) => {
-              const isAchieved = lines > index;
-              return (
-                <span 
-                  key={index} 
-                  className={`
-                    w-8 h-8 flex items-center justify-center rounded-lg font-extrabold text-lg transition-all duration-500
-                    ${isAchieved 
-                      ? 'bg-indigo-500 text-white shadow-[0_0_15px_rgba(99,102,241,0.5)] scale-110' 
-                      : 'bg-neutral-800 text-neutral-600 opacity-50'
-                    }
-                  `}
-                >
-                  {letter}
-                </span>
-              );
-            })}
-          </div>
+      <div className="flex flex-col items-center justify-center bg-neutral-900/50 p-6 rounded-3xl border border-white/5 space-y-6 shadow-inner">
+        {/* BINGO Letters */}
+        <div className="flex gap-3 sm:gap-4" dir="ltr">
+          {["B", "I", "N", "G", "O"].map((letter, index) => {
+            const isAchieved = lines > index;
+            return (
+              <span 
+                key={index} 
+                className={`
+                  w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center rounded-2xl font-black text-3xl sm:text-4xl transition-all duration-500
+                  ${isAchieved 
+                    ? 'bg-indigo-500 text-white shadow-[0_0_25px_rgba(99,102,241,0.6)] scale-110' 
+                    : 'bg-neutral-800 text-neutral-600 opacity-50'
+                  }
+                `}
+              >
+                {letter}
+              </span>
+            );
+          })}
         </div>
-        <div className="text-left">
+
+        {/* Status Indicator */}
+        <div className="text-center w-full">
           {room.status === 'playing' && (
-            <div className={`px-4 py-2 rounded-full font-bold text-sm ${isMyTurn ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30' : 'bg-neutral-800 text-neutral-400'}`}>
+            <div className={`inline-block px-8 py-3 rounded-full font-bold text-base sm:text-lg transition-all duration-300 ${isMyTurn ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 animate-pulse' : 'bg-neutral-800 text-neutral-400'}`}>
               {isMyTurn ? 'دورك الآن!' : 'انتظر دور الخصم...'}
             </div>
           )}
           {room.status === 'finished' && (
-            <div className="flex flex-col items-end gap-2">
-              <div className="px-4 py-2 rounded-full font-bold text-sm bg-yellow-500/20 text-yellow-400 border border-yellow-500/30">
+            <div className="flex flex-col items-center gap-4">
+              <div className="px-8 py-3 rounded-full font-bold text-base sm:text-lg bg-yellow-500/20 text-yellow-400 border border-yellow-500/30">
                 {lines >= 5 ? 'لقد فزت! 🎉' : 'انتهت اللعبة! 😞'}
               </div>
               <button
                 onClick={handlePlayAgain}
-                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-full font-bold text-sm transition-all border border-indigo-500/50 shadow-lg shadow-indigo-500/20"
+                className="px-8 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-full font-bold text-lg transition-all border border-indigo-500/50 shadow-lg shadow-indigo-500/20 w-full max-w-xs"
               >
                 إعادة اللعب
               </button>
