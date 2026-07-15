@@ -81,8 +81,25 @@ export default function BingoBoard({ roomId, playerId, room }: BingoBoardProps) 
       if (lines >= 5) playSound('win');
       else playSound('lose');
     }
+    if (prevStatus.current === 'finished' && room.status === 'playing') {
+      const newBoard = Array.from({ length: 25 }, (_, i) => i + 1).sort(() => Math.random() - 0.5);
+      localStorage.setItem(`bingo_board_${roomId}`, JSON.stringify(newBoard));
+      setBoard(newBoard);
+      setLines(0);
+    }
     prevStatus.current = room.status;
-  }, [room.status, lines]);
+  }, [room.status, lines, roomId]);
+
+  const handlePlayAgain = async () => {
+    await supabase
+      .from("rooms")
+      .update({ 
+        status: "playing",
+        selected_numbers: [],
+        current_turn: room.player1_id
+      })
+      .eq("id", roomId);
+  };
 
   useEffect(() => {
     const saved = localStorage.getItem(`bingo_board_${roomId}`);
@@ -177,8 +194,16 @@ export default function BingoBoard({ roomId, playerId, room }: BingoBoardProps) 
             </div>
           )}
           {room.status === 'finished' && (
-            <div className="px-4 py-2 rounded-full font-bold text-sm bg-yellow-500/20 text-yellow-400 border border-yellow-500/30">
-              {lines >= 5 ? 'لقد فزت! 🎉' : 'انتهت اللعبة! 😞'}
+            <div className="flex flex-col items-end gap-2">
+              <div className="px-4 py-2 rounded-full font-bold text-sm bg-yellow-500/20 text-yellow-400 border border-yellow-500/30">
+                {lines >= 5 ? 'لقد فزت! 🎉' : 'انتهت اللعبة! 😞'}
+              </div>
+              <button
+                onClick={handlePlayAgain}
+                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-full font-bold text-sm transition-all border border-indigo-500/50 shadow-lg shadow-indigo-500/20"
+              >
+                إعادة اللعب
+              </button>
             </div>
           )}
         </div>
