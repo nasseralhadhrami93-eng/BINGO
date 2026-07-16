@@ -12,6 +12,7 @@ type BingoBoardProps = {
 export default function BingoBoard({ roomId, playerId, room }: BingoBoardProps) {
   const [board, setBoard] = useState<number[]>([]);
   const [lines, setLines] = useState(0);
+  const [isEnvyActive, setIsEnvyActive] = useState(false);
 
   const prevSelectedLength = useRef(0);
   const prevStatus = useRef('waiting');
@@ -96,6 +97,8 @@ export default function BingoBoard({ roomId, playerId, room }: BingoBoardProps) 
       .update({ 
         status: "playing",
         selected_numbers: [],
+        blocked_numbers: [],
+        envy_used_by: [],
         current_turn: room.player1_id
       })
       .eq("id", roomId);
@@ -147,17 +150,32 @@ export default function BingoBoard({ roomId, playerId, room }: BingoBoardProps) 
 
   const handleCellClick = async (num: number) => {
     if (!isMyTurn || room.status !== 'playing') return;
-    if (room.selected_numbers?.includes(num)) return;
+    if (room.selected_numbers?.includes(num) || room.blocked_numbers?.includes(num)) return;
 
-    const newSelected = [...(room.selected_numbers || []), num];
-    
-    await supabase
-      .from("rooms")
-      .update({ 
-        selected_numbers: newSelected,
-        current_turn: otherPlayerId 
-      })
-      .eq("id", roomId);
+    if (isEnvyActive) {
+      const newBlocked = [...(room.blocked_numbers || []), num];
+      const newEnvyUsedBy = [...(room.envy_used_by || []), playerId];
+      setIsEnvyActive(false);
+
+      await supabase
+        .from("rooms")
+        .update({ 
+          blocked_numbers: newBlocked,
+          envy_used_by: newEnvyUsedBy,
+          current_turn: otherPlayerId 
+        })
+        .eq("id", roomId);
+    } else {
+      const newSelected = [...(room.selected_numbers || []), num];
+      
+      await supabase
+        .from("rooms")
+        .update({ 
+          selected_numbers: newSelected,
+          current_turn: otherPlayerId 
+        })
+        .eq("id", roomId);
+    }
   };
 
   if (board.length === 0) return null;
@@ -188,6 +206,17 @@ export default function BingoBoard({ roomId, playerId, room }: BingoBoardProps) 
 
         {/* Status Indicator */}
         <div className="text-center w-full">
+          {room.mode === 'envy' && room.status === 'playing' && !(room.envy_used_by?.includes(playerId)) && (
+            <div className="mb-4">
+              <button 
+                onClick={() => setIsEnvyActive(!isEnvyActive)}
+                disabled={!isMyTurn}
+                className={`px-6 py-2 rounded-full font-bold transition-all ${isEnvyActive ? 'bg-red-600 text-white shadow-[0_0_15px_rgba(220,38,38,0.6)] scale-105' : 'bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30'} ${!isMyTurn ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                {isEnvyActive ? 'اضغط على رقم لـ حظره 👁️' : 'استخدم الحسد 👁️'}
+              </button>
+            </div>
+          )}
           {room.status === 'playing' && (
             <div className={`inline-block px-8 py-3 rounded-full font-bold text-base sm:text-lg transition-all duration-300 ${isMyTurn ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 animate-pulse' : 'bg-neutral-800 text-neutral-400'}`}>
               {isMyTurn ? 'دورك الآن!' : 'انتظر دور الخصم...'}
@@ -212,15 +241,17 @@ export default function BingoBoard({ roomId, playerId, room }: BingoBoardProps) 
       <div className="grid grid-cols-5 gap-2 sm:gap-3 p-4 bg-neutral-900/40 rounded-3xl border border-white/5 shadow-2xl">
         {board.map((num, i) => {
           const isSelected = room.selected_numbers?.includes(num);
+          const isBlocked = room.blocked_numbers?.includes(num);
           return (
             <button
               key={i}
-              disabled={isSelected || !isMyTurn || room.status !== 'playing'}
+              disabled={isSelected || isBlocked || !isMyTurn || room.status !== 'playing'}
               onClick={() => handleCellClick(num)}
               className={`
                 aspect-square rounded-xl sm:rounded-2xl text-lg sm:text-2xl font-bold flex items-center justify-center
                 transition-all duration-300 relative overflow-hidden
-                ${isSelected 
+                ${isBlocked ? 'bg-red-900/40 text-red-500 border-red-500/50 cursor-not-allowed shadow-[inset_0_0_15px_rgba(239,68,68,0.2)]' :
+                  isSelected 
                   ? 'bg-indigo-500 text-white scale-[0.97] shadow-inner border-transparent' 
                   : isMyTurn && room.status === 'playing'
                     ? 'bg-neutral-800 text-white hover:bg-neutral-700 hover:scale-[1.03] active:scale-95 cursor-pointer shadow-md border border-white/10'
@@ -230,6 +261,9 @@ export default function BingoBoard({ roomId, playerId, room }: BingoBoardProps) 
             >
               {isSelected && (
                 <span className="absolute inset-0 bg-white/20 animate-pulse" />
+              )}
+              {isBlocked && (
+                <span className="absolute inset-0 flex items-center justify-center text-red-500/40 font-black text-4xl sm:text-5xl select-none rotate-12">X</span>
               )}
               <span className="relative z-10">{num}</span>
             </button>

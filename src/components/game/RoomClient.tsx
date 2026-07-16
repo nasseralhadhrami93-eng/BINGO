@@ -14,6 +14,9 @@ type Room = {
   status: string;
   selected_numbers: number[] | null;
   current_turn: string | null;
+  mode: 'classic' | 'envy';
+  blocked_numbers: number[] | null;
+  envy_used_by: string[] | null;
 };
 
 export default function RoomClient({ roomId }: { roomId: string }) {

@@ -9,6 +9,7 @@ export default function Home() {
   const [isCreating, setIsCreating] = useState(false);
   const [playerId, setPlayerId] = useState<string | null>(null);
   const [playerName, setPlayerName] = useState("");
+  const [gameMode, setGameMode] = useState<'classic' | 'envy'>('classic');
 
   useEffect(() => {
     let storedId = localStorage.getItem("bingo_player_id");
@@ -30,7 +31,7 @@ export default function Home() {
     try {
       const { data, error } = await supabase
         .from("rooms")
-        .insert([{ player1_id: playerId, player1_name: playerName.trim(), status: "waiting" }])
+        .insert([{ player1_id: playerId, player1_name: playerName.trim(), status: "waiting", mode: gameMode }])
         .select()
         .single();
 
@@ -69,6 +70,21 @@ export default function Home() {
             maxLength={20}
             className="w-full bg-neutral-900/50 border border-white/10 rounded-2xl px-6 py-4 text-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 text-center transition-all"
           />
+
+          <div className="flex rounded-2xl bg-neutral-900/50 border border-white/10 overflow-hidden p-1">
+            <button
+              onClick={() => setGameMode('classic')}
+              className={`flex-1 py-3 text-center rounded-xl font-bold transition-all ${gameMode === 'classic' ? 'bg-indigo-600 text-white shadow-md' : 'text-neutral-500 hover:text-white'}`}
+            >
+              كلاسيكي 🎲
+            </button>
+            <button
+              onClick={() => setGameMode('envy')}
+              className={`flex-1 py-3 text-center rounded-xl font-bold transition-all ${gameMode === 'envy' ? 'bg-red-600 text-white shadow-md' : 'text-neutral-500 hover:text-white'}`}
+            >
+              الحسد 👁️
+            </button>
+          </div>
 
           <button
             onClick={handleCreateRoom}
