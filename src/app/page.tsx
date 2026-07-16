@@ -9,7 +9,11 @@ export default function Home() {
   const [isCreating, setIsCreating] = useState(false);
   const [playerId, setPlayerId] = useState<string | null>(null);
   const [playerName, setPlayerName] = useState("");
-  const [gameMode, setGameMode] = useState<'classic' | 'envy'>('classic');
+  
+  // Game Selection State
+  const [selectedGame, setSelectedGame] = useState<'bingo' | 'xo'>('bingo');
+  // Bingo-specific mode
+  const [bingoMode, setBingoMode] = useState<'classic' | 'envy'>('classic');
 
   useEffect(() => {
     let storedId = localStorage.getItem("bingo_player_id");
@@ -29,16 +33,29 @@ export default function Home() {
     localStorage.setItem("bingo_player_name", playerName.trim());
 
     try {
-      const { data, error } = await supabase
-        .from("rooms")
-        .insert([{ player1_id: playerId, player1_name: playerName.trim(), status: "waiting", mode: gameMode }])
-        .select()
-        .single();
+      if (selectedGame === 'bingo') {
+        const { data, error } = await supabase
+          .from("rooms")
+          .insert([{ player1_id: playerId, player1_name: playerName.trim(), status: "waiting", mode: bingoMode }])
+          .select()
+          .single();
 
-      if (error) throw error;
+        if (error) throw error;
+        if (data && data.id) {
+          router.push(`/game/${data.id}`);
+        }
+      } else if (selectedGame === 'xo') {
+        // Create an XO room
+        const { data, error } = await supabase
+          .from("xo_rooms")
+          .insert([{ player1_id: playerId, player1_name: playerName.trim(), status: "waiting" }])
+          .select()
+          .single();
 
-      if (data && data.id) {
-        router.push(`/game/${data.id}`);
+        if (error) throw error;
+        if (data && data.id) {
+          router.push(`/xo/${data.id}`);
+        }
       }
     } catch (error: any) {
       console.error("Error creating room:", error);
@@ -54,14 +71,40 @@ export default function Home() {
       <div className="max-w-md w-full flex flex-col items-center space-y-10">
         <div className="text-center space-y-4">
           <h1 className="text-5xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-white to-neutral-500 drop-shadow-sm">
-            بينجو
+            ألعاب التحدي
           </h1>
           <p className="text-neutral-400 text-lg">
-            مرحباً بك في اللعبة. أدخل اسمك وقم بإنشاء غرفة للبدء.
+            اختر لعبتك المفضلة، أدخل اسمك، وابدأ التحدي!
           </p>
         </div>
 
-        <div className="w-full space-y-4">
+        <div className="w-full space-y-6">
+          {/* Game Selection */}
+          <div className="flex gap-4">
+            <button
+              onClick={() => setSelectedGame('bingo')}
+              className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all ${
+                selectedGame === 'bingo' 
+                  ? 'border-indigo-500 bg-indigo-500/10' 
+                  : 'border-white/5 bg-neutral-900/50 hover:bg-neutral-800/50'
+              }`}
+            >
+              <span className="text-3xl">🎲</span>
+              <span className="font-bold">بينجو</span>
+            </button>
+            <button
+              onClick={() => setSelectedGame('xo')}
+              className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all ${
+                selectedGame === 'xo' 
+                  ? 'border-emerald-500 bg-emerald-500/10' 
+                  : 'border-white/5 bg-neutral-900/50 hover:bg-neutral-800/50'
+              }`}
+            >
+              <span className="text-3xl">⏱️</span>
+              <span className="font-bold">XO الذهني</span>
+            </button>
+          </div>
+
           <input 
             type="text" 
             placeholder="أدخل اسمك هنا..."
@@ -71,39 +114,42 @@ export default function Home() {
             className="w-full bg-neutral-900/50 border border-white/10 rounded-2xl px-6 py-4 text-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 text-center transition-all"
           />
 
-          <div className="flex rounded-2xl bg-neutral-900/50 border border-white/10 overflow-hidden p-1">
-            <button
-              onClick={() => setGameMode('classic')}
-              className={`flex-1 py-3 text-center rounded-xl font-bold transition-all ${gameMode === 'classic' ? 'bg-indigo-600 text-white shadow-md' : 'text-neutral-500 hover:text-white'}`}
-            >
-              كلاسيكي 🎲
-            </button>
-            <button
-              onClick={() => setGameMode('envy')}
-              className={`flex-1 py-3 text-center rounded-xl font-bold transition-all ${gameMode === 'envy' ? 'bg-red-600 text-white shadow-md' : 'text-neutral-500 hover:text-white'}`}
-            >
-              الحسد 👁️
-            </button>
-          </div>
+          {/* Extra options for Bingo */}
+          {selectedGame === 'bingo' && (
+            <div className="flex rounded-2xl bg-neutral-900/50 border border-white/10 overflow-hidden p-1 animate-fade-in">
+              <button
+                onClick={() => setBingoMode('classic')}
+                className={`flex-1 py-3 text-center rounded-xl font-bold transition-all ${bingoMode === 'classic' ? 'bg-indigo-600 text-white shadow-md' : 'text-neutral-500 hover:text-white'}`}
+              >
+                كلاسيكي 🎲
+              </button>
+              <button
+                onClick={() => setBingoMode('envy')}
+                className={`flex-1 py-3 text-center rounded-xl font-bold transition-all ${bingoMode === 'envy' ? 'bg-red-600 text-white shadow-md' : 'text-neutral-500 hover:text-white'}`}
+              >
+                الحسد 👁️
+              </button>
+            </div>
+          )}
 
           <button
             onClick={handleCreateRoom}
             disabled={isCreating || !playerName.trim()}
             className={`
-              relative group overflow-hidden rounded-2xl p-[1px] w-full
+              relative group overflow-hidden rounded-2xl p-[1px] w-full mt-4
               transition-all duration-300 ease-out
               focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:ring-offset-2 focus:ring-offset-neutral-950
               ${(isCreating || !playerName.trim()) ? 'opacity-60 cursor-not-allowed scale-95' : 'hover:scale-105 active:scale-95'}
             `}
           >
-            <span className="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-70 group-hover:opacity-100 transition-opacity duration-300 blur-sm" />
-            <span className="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
+            <span className={`absolute inset-0 bg-gradient-to-r ${selectedGame === 'bingo' ? 'from-indigo-500 via-purple-500 to-pink-500' : 'from-emerald-500 via-teal-500 to-cyan-500'} opacity-70 group-hover:opacity-100 transition-opacity duration-300 blur-sm`} />
+            <span className={`absolute inset-0 bg-gradient-to-r ${selectedGame === 'bingo' ? 'from-indigo-500 via-purple-500 to-pink-500' : 'from-emerald-500 via-teal-500 to-cyan-500'}`} />
             
             <div className="relative bg-neutral-950/80 backdrop-blur-xl px-8 py-4 rounded-2xl flex items-center justify-center gap-3 w-full h-full border border-white/10 transition-colors group-hover:bg-neutral-950/50">
               {isCreating ? (
                 <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
               ) : (
-                <svg className="w-5 h-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <svg className={`w-5 h-5 ${selectedGame === 'bingo' ? 'text-indigo-400' : 'text-emerald-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
                 </svg>
               )}
