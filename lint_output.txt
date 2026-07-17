@@ -1,0 +1,193 @@
+
+> bingo@0.1.0 lint
+> eslint
+
+
+/Users/nasser/Desktop/BINGO/src/app/page.tsx
+  24:5   error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/nasser/Desktop/BINGO/src/app/page.tsx:24:5
+  22 |       localStorage.setItem("bingo_player_id", storedId);
+  23 |     }
+> 24 |     setPlayerId(storedId);
+     |     ^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  25 |
+  26 |     const storedName = localStorage.getItem("bingo_player_name");
+  27 |     if (storedName) setPlayerName(storedName);  react-hooks/set-state-in-effect
+  60:21  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             @typescript-eslint/no-explicit-any
+
+/Users/nasser/Desktop/BINGO/src/components/game/BingoBoard.tsx
+    9:9   error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                @typescript-eslint/no-explicit-any
+   22:62  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                @typescript-eslint/no-explicit-any
+  110:7   error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/nasser/Desktop/BINGO/src/components/game/BingoBoard.tsx:110:7
+  108 |     const saved = localStorage.getItem(`bingo_board_${roomId}`);
+  109 |     if (saved) {
+> 110 |       setBoard(JSON.parse(saved));
+      |       ^^^^^^^^ Avoid calling setState() directly within an effect
+  111 |     } else {
+  112 |       const newBoard = Array.from({ length: 25 }, (_, i) => i + 1).sort(() => Math.random() - 0.5);
+  113 |       localStorage.setItem(`bingo_board_${roomId}`, JSON.stringify(newBoard));  react-hooks/set-state-in-effect
+  136:5   error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/nasser/Desktop/BINGO/src/components/game/BingoBoard.tsx:136:5
+  134 |     if ([4,8,12,16,20].every(i => selected.includes(board[i]))) count++;
+  135 |
+> 136 |     setLines(count);
+      |     ^^^^^^^^ Avoid calling setState() directly within an effect
+  137 |
+  138 |     // إذا أكمل 5 خطوط (BINGO)، ننهي اللعبة
+  139 |     if (count >= 5 && room.status === 'playing') {                                                                                                                            react-hooks/set-state-in-effect
+
+/Users/nasser/Desktop/BINGO/src/components/game/RoomClient.tsx
+  39:5   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/nasser/Desktop/BINGO/src/components/game/RoomClient.tsx:39:5
+  37 |       localStorage.setItem("bingo_player_id", storedId);
+  38 |     }
+> 39 |     setPlayerId(storedId);
+     |     ^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  40 |
+  41 |     const storedName = localStorage.getItem("bingo_player_name");
+  42 |     if (storedName) {                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             react-hooks/set-state-in-effect
+  64:11  error    Error: Cannot access variable before it is declared
+
+`joinRoom` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+/Users/nasser/Desktop/BINGO/src/components/game/RoomClient.tsx:64:11
+  62 |       if (data.status === 'waiting' && data.player1_id !== storedId && !data.player2_id) {
+  63 |         if (storedName) {
+> 64 |           joinRoom(storedId, storedName, data.player1_id);
+     |           ^^^^^^^^ `joinRoom` accessed before it is declared
+  65 |         } else {
+  66 |           setNeedsName(true);
+  67 |         }
+
+/Users/nasser/Desktop/BINGO/src/components/game/RoomClient.tsx:90:3
+   88 |   }, [roomId]);
+   89 |
+>  90 |   const joinRoom = async (pId: string, name: string, creatorId: string | null) => {
+      |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  91 |     const { error } = await supabase
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  92 |       .from("rooms")
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  93 |       .update({ player2_id: pId, player2_name: name, status: "playing", current_turn: creatorId }) 
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  94 |       .eq("id", roomId)
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  95 |       .is("player2_id", null);
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  96 |     
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  97 |     if (error) console.error("Error joining room:", error);
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  98 |     else setNeedsName(false);
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  99 |   };
+      | ^^^^^ `joinRoom` is declared here
+  100 |
+  101 |   const handleJoinSubmit = () => {
+  102 |     if (!playerName.trim() || !playerId || !room) return;  react-hooks/immutability
+  88:6   warning  React Hook useEffect has a missing dependency: 'joinRoom'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              react-hooks/exhaustive-deps
+
+/Users/nasser/Desktop/BINGO/src/components/game/xo/XORoomClient.tsx
+    3:31  warning  'useRef' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            @typescript-eslint/no-unused-vars
+   49:5   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/nasser/Desktop/BINGO/src/components/game/xo/XORoomClient.tsx:49:5
+  47 |       localStorage.setItem("bingo_player_id", storedId);
+  48 |     }
+> 49 |     setPlayerId(storedId);
+     |     ^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  50 |
+  51 |     const storedName = localStorage.getItem("bingo_player_name");
+  52 |     if (storedName) {                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             react-hooks/set-state-in-effect
+   82:11  error    Error: Cannot access variable before it is declared
+
+`joinRoom` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+/Users/nasser/Desktop/BINGO/src/components/game/xo/XORoomClient.tsx:82:11
+  80 |       if (data.status === 'waiting' && data.player1_id !== storedId && !data.player2_id) {
+  81 |         if (storedName) {
+> 82 |           joinRoom(storedId, storedName, data.player1_id);
+     |           ^^^^^^^^ `joinRoom` accessed before it is declared
+  83 |         } else {
+  84 |           setNeedsName(true);
+  85 |         }
+
+/Users/nasser/Desktop/BINGO/src/components/game/xo/XORoomClient.tsx:108:3
+  106 |   }, [roomId]);
+  107 |
+> 108 |   const joinRoom = async (pId: string, name: string, creatorId: string | null) => {
+      |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 109 |     const { error } = await supabase
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 110 |       .from("xo_rooms")
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 111 |       .update({ player2_id: pId, player2_name: name, status: "playing" }) 
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 112 |       .eq("id", roomId)
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 113 |       .is("player2_id", null);
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 114 |     
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 115 |     if (error) console.error("Error joining room:", error);
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 116 |     else setNeedsName(false);
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 117 |   };
+      | ^^^^^ `joinRoom` is declared here
+  118 |
+  119 |   const handleJoinSubmit = () => {
+  120 |     if (!playerName.trim() || !playerId || !room) return;  react-hooks/immutability
+  106:6   warning  React Hook useEffect has a missing dependency: 'joinRoom'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   react-hooks/exhaustive-deps
+  108:54  warning  'creatorId' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         @typescript-eslint/no-unused-vars
+  196:36  error    Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+/Users/nasser/Desktop/BINGO/src/components/game/xo/XORoomClient.tsx:196:36
+  194 |     } else {
+  195 |       // Reset for next round
+> 196 |       const newTarget = Math.floor(Math.random() * 14) + 1;
+      |                                    ^^^^^^^^^^^^^ Cannot call impure function
+  197 |       await supabase.from("xo_rooms").update({ 
+  198 |         xo_board: newBoard,
+  199 |         target_time: newTarget,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          react-hooks/purity
+  279:9   warning  'opponentStopSet' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          @typescript-eslint/no-unused-vars
+
+✖ 16 problems (11 errors, 5 warnings)
+
