@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
 
 type XORoom = {
   id: string;
@@ -212,6 +213,21 @@ export default function XORoomClient({ roomId }: { roomId: string }) {
     return <div className="text-red-400 text-center mt-10">الغرفة غير موجودة أو حدث خطأ.</div>;
   }
 
+  const handlePlayAgain = async () => {
+    if (!room || !playerId) return;
+    const newTarget = Math.floor(Math.random() * 14) + 1;
+    await supabase.from("xo_rooms").update({ 
+      xo_board: Array(9).fill(""),
+      game_winner: null,
+      status: "playing",
+      target_time: newTarget,
+      p1_start: null,
+      p1_stop: null,
+      p2_start: null,
+      p2_stop: null
+    }).eq("id", roomId);
+  };
+
   if (needsName) {
     return (
       <div className="w-full max-w-md mx-auto space-y-6 mt-10 text-center bg-neutral-900/50 p-8 rounded-3xl border border-white/5 animate-fade-in-up">
@@ -247,8 +263,12 @@ export default function XORoomClient({ roomId }: { roomId: string }) {
   let p1WinsRound = false;
   let p1Diff = 0;
   let p2Diff = 0;
+  let p1Actual = 0;
+  let p2Actual = 0;
   
   if (isXoPhase && room.target_time) {
+    p1Actual = (room.p1_stop! - (room.p1_start || 0)) / 1000;
+    p2Actual = (room.p2_stop! - (room.p2_start || 0)) / 1000;
     p1Diff = Math.abs((room.p1_stop! - (room.p1_start || 0)) - room.target_time * 1000);
     p2Diff = Math.abs((room.p2_stop! - (room.p2_start || 0)) - room.target_time * 1000);
     p1WinsRound = p1Diff <= p2Diff;
@@ -271,12 +291,20 @@ export default function XORoomClient({ roomId }: { roomId: string }) {
               <><span className="w-3 h-3 rounded-full bg-red-400"></span> <span className="text-red-400">انتهت</span></>
             }
           </h2>
-          <button 
-            onClick={copyLink}
-            className="flex items-center gap-2 bg-white/5 hover:bg-white/10 text-white px-4 py-2 rounded-xl transition-all border border-white/5 text-sm"
-          >
-            {copied ? 'تم النسخ!' : 'انسخ رابط الغرفة'}
-          </button>
+          <div className="flex gap-2">
+            <button 
+              onClick={copyLink}
+              className="flex items-center gap-2 bg-white/5 hover:bg-white/10 text-white px-4 py-2 rounded-xl transition-all border border-white/5 text-sm"
+            >
+              {copied ? 'تم النسخ!' : 'انسخ رابط الغرفة'}
+            </button>
+            <button 
+              onClick={() => router.push("/")}
+              className="flex items-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 px-4 py-2 rounded-xl transition-all border border-red-500/20 text-sm"
+            >
+              العودة للرئيسية
+            </button>
+          </div>
         </div>
         
         <div className="grid grid-cols-2 gap-4 text-center relative z-10">
@@ -303,7 +331,15 @@ export default function XORoomClient({ roomId }: { roomId: string }) {
           <h2 className="text-4xl font-extrabold text-white mb-2">
             {room.game_winner === 'Draw' ? 'تعادل!' : `الفائز هو ${room.game_winner === 'P1' ? room.player1_name : room.player2_name} 🎉`}
           </h2>
-          <p className="text-emerald-200">العبوا مرة أخرى لكسر التعادل!</p>
+          <p className="text-emerald-200 mb-6">العبوا مرة أخرى لكسر التعادل!</p>
+          {(!isSpectator) && (
+            <button 
+              onClick={handlePlayAgain}
+              className="bg-emerald-500 hover:bg-emerald-400 text-neutral-900 font-bold py-3 px-8 rounded-xl transition-transform hover:scale-105 active:scale-95 shadow-lg"
+            >
+              العب مرة أخرى
+            </button>
+          )}
         </div>
       )}
 
@@ -358,13 +394,21 @@ export default function XORoomClient({ roomId }: { roomId: string }) {
           {isXoPhase && (
             <div className="bg-neutral-900/80 border border-white/10 p-8 rounded-3xl text-center space-y-8 animate-fade-in">
               <div className="space-y-2">
-                <h3 className="text-2xl font-bold text-white">نتائج التحدي ({room.target_time} ثانية)</h3>
-                <div className="flex justify-center gap-8 text-lg">
-                  <div className={p1WinsRound ? 'text-emerald-400 font-bold' : 'text-red-400'}>
-                    {room.player1_name}: {(p1Diff / 1000).toFixed(3)}s فرق
+                <h3 className="text-2xl font-bold text-white">الهدف ({room.target_time} ثانية)</h3>
+                <div className="flex justify-center gap-8 text-lg mt-4">
+                  <div className={`flex-1 p-4 rounded-2xl ${p1WinsRound ? 'bg-emerald-500/20 border border-emerald-500/30' : 'bg-red-500/10 border border-red-500/20'}`}>
+                    <p className="text-neutral-300 text-sm mb-1">{room.player1_name}</p>
+                    <p className={`text-3xl font-bold mb-1 ${p1WinsRound ? 'text-emerald-400' : 'text-red-400'}`}>
+                      {p1Actual.toFixed(3)}s
+                    </p>
+                    <p className={`text-sm ${p1WinsRound ? 'text-emerald-200/70' : 'text-red-200/70'}`}>الفرق: {(p1Diff / 1000).toFixed(3)}s</p>
                   </div>
-                  <div className={!p1WinsRound ? 'text-emerald-400 font-bold' : 'text-red-400'}>
-                    {room.player2_name}: {(p2Diff / 1000).toFixed(3)}s فرق
+                  <div className={`flex-1 p-4 rounded-2xl ${!p1WinsRound ? 'bg-emerald-500/20 border border-emerald-500/30' : 'bg-red-500/10 border border-red-500/20'}`}>
+                    <p className="text-neutral-300 text-sm mb-1">{room.player2_name}</p>
+                    <p className={`text-3xl font-bold mb-1 ${!p1WinsRound ? 'text-emerald-400' : 'text-red-400'}`}>
+                      {p2Actual.toFixed(3)}s
+                    </p>
+                    <p className={`text-sm ${!p1WinsRound ? 'text-emerald-200/70' : 'text-red-200/70'}`}>الفرق: {(p2Diff / 1000).toFixed(3)}s</p>
                   </div>
                 </div>
                 <div className="text-xl font-bold text-yellow-400 mt-4">
