@@ -28,6 +28,7 @@ const WINNING_LINES = [
 ];
 
 export default function XORoomClient({ roomId }: { roomId: string }) {
+  const router = useRouter();
   const [room, setRoom] = useState<XORoom | null>(null);
   const [playerId, setPlayerId] = useState<string | null>(null);
   const [playerName, setPlayerName] = useState<string>("");
